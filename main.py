@@ -1,60 +1,22 @@
 import subprocess
-
-proc = subprocess.Popen('iptables-save | grep "^*" | cut -c2-', stdout=subprocess.PIPE, shell=True)
-(out, err) = proc.communicate()
-iptable_names = out.decode('utf8').splitlines()
-#os.system('iptables-save | grep "^*" | cut -c2-')
-
-
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'untitled.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
-# WARNING! All changes made in this file will be lost!
-
-
 from PyQt5 import QtCore, QtGui, QtWidgets
+from ui import Ui_MainWindow
 
+window = None
+iptable_names = None
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(667, 290)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.comboBox = QtWidgets.QComboBox(self.centralwidget)
-        self.comboBox.setGeometry(QtCore.QRect(10, 10, 141, 32))
-        self.comboBox.setObjectName("comboBox")
-        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(10, 50, 141, 181))
-        self.listWidget.setObjectName("listWidget")
-        self.listWidget_2 = QtWidgets.QListWidget(self.centralwidget)
-        self.listWidget_2.setGeometry(QtCore.QRect(160, 50, 501, 181))
-        self.listWidget_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
-        self.listWidget_2.setObjectName("listWidget_2")
-        self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox.setGeometry(QtCore.QRect(170, 11, 141, 31))
-        self.checkBox.setChecked(True)
-        self.checkBox.setObjectName("checkBox")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 667, 30))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+def run_cmd(cmd):    
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    (out, err) = proc.communicate()
+    
+    if window:
+        window.listLog.insertItem(0, '$ ' + cmd)
+    
+    return out
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.checkBox.setText(_translate("MainWindow", "Excluír Docker"))
-
+def run_cmd_splitlines(cmd):
+    out = run_cmd(cmd)
+    return out.decode('utf8').splitlines()
 
 class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -84,9 +46,7 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         selected_table = self.comboBox.currentText()
         print(selected_table)
         
-        proc = subprocess.Popen(f'sudo iptables -t {selected_table} -nL | grep Chain | {self.exclude_grep} | cut -d" " -f2', stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        chains = out.decode('utf8').splitlines()
+        chains = run_cmd_splitlines(f'sudo iptables -t {selected_table} -nL | grep Chain | {self.exclude_grep} | cut -d" " -f2')
         
         self.listWidget.addItems(chains)
         
@@ -98,19 +58,24 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         selected_table = self.comboBox.currentText()
         print(selected_table, selected_chain)
         
-        proc = subprocess.Popen(f'sudo iptables -t {selected_table} -S {selected_chain} | {self.exclude_grep}', stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        rules = out.decode('utf8').splitlines()
+        rules = run_cmd_splitlines(f'sudo iptables -t {selected_table} -S {selected_chain} | {self.exclude_grep}')
         
         self.listWidget_2.addItems(rules)
 
 
 import sys
-def window():
+def main():
+    global window, iptable_names
+    
+    iptable_names = run_cmd_splitlines('iptables-save | grep "^*" | cut -c2-')
+    #os.system('iptables-save | grep "^*" | cut -c2-')
+    
     app = QtWidgets.QApplication(sys.argv)
-    form = ExampleApp()
-    form.show()
+    window = ExampleApp()
+
+    window.show()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
-   window()
+   main()
+   

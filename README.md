@@ -4,8 +4,7 @@ Miniprograma para ver más cómodamente las listas de reglas de `iptables`, toda
 - `sudo python3 main.py` para correr.   
 (requiere `sudo` porque usa el comando `iptables` para hacer todas las operaciones)
 
-Programa:
-
+Interfaz:
 ![alt text](https://raw.githubusercontent.com/wencha/iptables-manager/master/capturas/main.png)
 
 

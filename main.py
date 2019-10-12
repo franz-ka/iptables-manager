@@ -1,16 +1,21 @@
 import subprocess
+import sys
+import datetime
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ui import Ui_MainWindow
 
 window = None
 iptable_names = None
+iptable_protocols = ['all', 'tcp', 'udp', 'icmp', 'sctp']
+iptable_acctions = ['ACCEPT', 'DROP', 'REJECT']
 
 def run_cmd(cmd):    
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     (out, err) = proc.communicate()
     
-    if window:
-        window.listLog.insertItem(0, '$ ' + cmd)
+    tstamp = datetime.datetime.now().strftime('%X')
+    window.listLog.insertItem(0, f'[{tstamp}]~$ {cmd}')
     
     return out
 
@@ -27,12 +32,9 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.exclude_grep = None
         self.checkBox.stateChanged.connect(self.updateDockerExclude)
         
-        self.comboBox.addItems(iptable_names)
         self.comboBox.currentIndexChanged.connect(self.updateChainList)
         
         self.listWidget.currentTextChanged.connect(self.updateRulesList)
-        
-        self.updateDockerExclude()
         
     def updateDockerExclude(self):
         self.exclude_docker = self.checkBox.isChecked()
@@ -44,6 +46,10 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.listWidget_2.clear()
         
         selected_table = self.comboBox.currentText()
+               
+        if not selected_table:
+            return
+        
         print(selected_table)
         
         chains = run_cmd_splitlines(f'sudo iptables -t {selected_table} -nL | grep Chain | {self.exclude_grep} | cut -d" " -f2')
@@ -51,10 +57,11 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.listWidget.addItems(chains)
         
     def updateRulesList(self, selected_chain):
-        self.listWidget_2.clear()
-        
+        self.listWidget_2.clear() 
+               
         if not selected_chain:
             return
+        
         selected_table = self.comboBox.currentText()
         print(selected_table, selected_chain)
         
@@ -63,15 +70,21 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.listWidget_2.addItems(rules)
 
 
-import sys
 def main():
     global window, iptable_names
     
-    iptable_names = run_cmd_splitlines('iptables-save | grep "^*" | cut -c2-')
-    #os.system('iptables-save | grep "^*" | cut -c2-')
-    
     app = QtWidgets.QApplication(sys.argv)
     window = ExampleApp()
+                
+    
+    iptable_names = run_cmd_splitlines('iptables-save | grep "^*" | cut -c2-')
+    iptable_names.insert(0, '')
+    #os.system('iptables-save | grep "^*" | cut -c2-')
+        
+    window.comboBox.addItems(iptable_names)
+    window.comboAddProtocolo.addItems(iptable_protocols)
+    window.comboAddAccion.addItems(iptable_acctions)
+    window.updateDockerExclude()
 
     window.show()
     sys.exit(app.exec_())

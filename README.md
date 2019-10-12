@@ -5,8 +5,10 @@ Miniprograma para ver más cómodamente las listas de reglas de `iptables`, toda
 (requiere `sudo` porque usa el comando `iptables` para hacer todas las operaciones)
 
 Interfaz:
+
 ![alt text](https://raw.githubusercontent.com/wencha/iptables-manager/master/capturas/main.png)
 
+-----
 
 *Opcional:* `sudo apt install qttools5-dev-tools` para instalar editor visual Qt Designer
 

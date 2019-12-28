@@ -58,7 +58,8 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         
     def updateDockerExclude(self):
         self.exclude_docker = self.checkBox.isChecked()
-        self.exclude_grep = 'grep -vE "docker0|DOCKER|br-(762|b21|79a|613)|172\.(17|18|19|20|21)\.0"' if self.exclude_docker else 'cat'
+        #self.exclude_grep = 'grep -vE "docker0|DOCKER|br-(762|b21|79a|613)|172\.(17|18|19|20|21)\.0"' if self.exclude_docker else 'cat'
+        self.exclude_grep = 'grep -vE "docker0|DOCKER|br-[a-f0-9]{8}|172\.[0-2][0-9]\.0"' if self.exclude_docker else 'cat'
         self.updateChainList()
         
     def updateChainList(self):
